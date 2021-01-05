@@ -9,7 +9,7 @@ import com.azure.storage.blob.BlobServiceClientBuilder;
 
 @Component
 public class AzureDemoService {
-public static final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=vjdemo;"+"AccountKey=ClHTkRkOmo6JBSAs7Zpv1fCfmXSW0+sF7JIOys83+ZKftz90mlo5JeH1VxiL5Bamp4NcntWxTVF+n3UA7Vnq/A==;"+"EndpointSuffix=core.windows.net;";
+public static final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=****;"+"AccountKey=*******==;"+"EndpointSuffix=core.windows.net;";
 	
 	public long getTotalCountInContainer(String containerName)
 	 {
