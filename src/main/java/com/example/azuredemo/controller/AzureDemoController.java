@@ -1,12 +1,15 @@
 package com.example.azuredemo.controller;
 
 import java.io.File;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +21,11 @@ import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.AccessTier;
 import com.azure.storage.blob.models.BlobItem;
 import com.example.azuredemo.service.AzureDemoService;
+import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.blob.CloudBlobClient;
+import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import com.microsoft.azure.storage.blob.ListBlobItem;
 
 
 @RestController
@@ -30,8 +38,8 @@ public class AzureDemoController {
 	@Autowired
 	private AzureDemoService azureDemoService;
 	
-	 @RequestMapping("/addNewGdg/{containerName}/{fileName}/{index}")
-	 public void addNewFile(@PathVariable String containerName,@PathVariable String fileName)
+	 @RequestMapping("/addNewGdg/{containerName}/{fileName}")
+	 public ResponseEntity<Object> addNewFile(@PathVariable String containerName,@PathVariable String fileName) throws InvalidKeyException, URISyntaxException, StorageException
 	 {
 		 long count = azureDemoService.getTotalCountInContainer(containerName);
 		 StringBuilder sb = new StringBuilder("WelcomeABC");
@@ -40,9 +48,12 @@ public class AzureDemoController {
 		 BlobClient blob = azureDemoService.getBlobFromContainer(sb.toString(), "demo");
 		 blob.setAccessTier(AccessTier.COOL);
 		 blob.uploadFromFile("/Users/vaishnavi/Downloads/azure-demo/src/main/resources/WelcomeABC.rtf");
+		 return new ResponseEntity<Object> (" upload successful for file " + sb.toString(), HttpStatus.OK);
+
+
 	 }
 	 
-	 @RequestMapping("retrieveOldGdg/{fileName}/{index}")
+	 @RequestMapping("/retrieveOldGdg/{fileName}/{index}")
 	 public void retrieveOldFile(@PathVariable String containerName,@PathVariable String fileName,@PathVariable long index)
 	 {
 		 long count = azureDemoService.getTotalCountInContainer("demo");
@@ -58,18 +69,47 @@ public class AzureDemoController {
 		 blob.downloadToFile("/Users/vaishnavi/Downloads/azure-demo/src/main/resources/newoutput");
 	 }
 	 
-	 @RequestMapping("getBlobVersions/{containerName}")
-	 public  ResponseEntity<Object> getBlobVersions(@PathVariable String containerName)
+		/*
+		 * @RequestMapping("/getBlobVersions/{containerName}") public
+		 * ResponseEntity<Object> getBlobVersions(@PathVariable String containerName) {
+		 * List<String> versionlist = new ArrayList<String>(); BlobContainerClient
+		 * containerClient = azureDemoService.getBlobContainerClient(containerName);
+		 * long count = containerClient.listBlobs().stream().count(); for(BlobItem
+		 * blobItem : containerClient.listBlobs()) {
+		 * versionlist.add(blobItem.getVersionId());
+		 * 
+		 * } return new ResponseEntity<Object> (versionlist, HttpStatus.OK); }
+		 */
+	 
+	 @GetMapping("/{containerName}")
+	 public ResponseEntity<Object> getContainerFromBlob(@PathVariable String containerName) throws InvalidKeyException, URISyntaxException, StorageException
 	 {
-		 List<String> versionlist = new ArrayList<String>();
-		 BlobContainerClient containerClient = azureDemoService.getBlobContainerClient(containerName);
-		 long count = containerClient.listBlobs().stream().count();  
-		 for(BlobItem blobItem : containerClient.listBlobs())
-		    {
-		    	versionlist.add(blobItem.getVersionId());
-		    	
-		    }
-		    return new ResponseEntity<Object> (versionlist, HttpStatus.OK);
+		 CloudBlobContainer container = azureDemoService.getCloudBlobContainer(containerName);
+		 container.createIfNotExists();
+		 return new ResponseEntity<Object> (container.getName() + " is found/created", HttpStatus.OK);
+	 }
+	 
+	 @GetMapping("/delete/{containerName}")
+	 public ResponseEntity<Object> deleteContainer(@PathVariable String containerName) throws InvalidKeyException, URISyntaxException, StorageException
+	 {
+		 CloudBlobContainer container = azureDemoService.getCloudBlobContainer(containerName);
+		 if(container.deleteIfExists())
+		 {
+			 return new ResponseEntity<Object> (container.getName() + " is deleted", HttpStatus.OK);
+		 }
+		 return new ResponseEntity<Object> (container.getName() + " is not found", HttpStatus.OK); 
+	 }
+	 
+	 @GetMapping("/{containerName}/getListOfBlobs")
+	 public ResponseEntity<Object> getListOfBlobs(@PathVariable String containerName) throws InvalidKeyException, URISyntaxException, StorageException
+	 {
+		 List<String> blobs = new ArrayList<String>();
+		 CloudBlobContainer container = azureDemoService.getCloudBlobContainer(containerName);
+		 for (ListBlobItem blobItem : container.listBlobs()) {
+			 blobs.add(blobItem.getUri().toString());
+		 }
+		 return new ResponseEntity<Object> (blobs, HttpStatus.OK); 
+
 	 }
 }
 
