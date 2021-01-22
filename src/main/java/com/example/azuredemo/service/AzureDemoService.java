@@ -2,6 +2,8 @@ package com.example.azuredemo.service;
 
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.stereotype.Component;
 
@@ -49,5 +51,21 @@ public class AzureDemoService {
 		   CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
 		   CloudBlobContainer container = blobClient.getContainerReference(containerName);
 		   return container;
+	}
+	
+	public boolean checkGdgIsValid(String containerName , String gdgToBeUploadedName) throws InvalidKeyException, URISyntaxException
+	{
+		 List<String> blobNames = new ArrayList<String>();
+		BlobServiceClient blobClient = new BlobServiceClientBuilder().connectionString(storageConnectionString).buildClient();
+		BlobContainerClient containerClient = blobClient.getBlobContainerClient(containerName);
+		 for(BlobItem blobItem : containerClient.listBlobs()) 
+		  { 
+			 	blobNames.add(blobItem.getName());
+		  }
+		 if(blobNames.contains(gdgToBeUploadedName))
+		 {
+			 return true;
+		 }
+		   return false;
 	}
 }
