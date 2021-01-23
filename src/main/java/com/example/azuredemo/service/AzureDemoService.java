@@ -120,13 +120,12 @@ public class AzureDemoService {
 		return count;
 	}
 	
-	public boolean updateGdgVersion() throws IOException
+	public boolean updateGdgVersionWithCount(long count) throws IOException
 	{
 		 BlobClient blobGdgVersion = getBlobFromContainer("gdgVersion", "demo");
 		 File gdgVersion = new File("/Users/vaishnavi/Downloads/poc/src/main/resources/gdgVersion");
 		 gdgVersion.setWritable(true);
 		 FileWriter fileWriter = new FileWriter(gdgVersion);
-		 long count = getTotalCountUsingVersionFile("demo");
 		 String strcount = String.valueOf(count);
 		 BufferedWriter writer = new BufferedWriter(fileWriter);
 		 fileWriter.write(strcount);
